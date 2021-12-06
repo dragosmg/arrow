@@ -1065,7 +1065,7 @@ agg_funcs$quantile <- function(x, probs, na.rm = FALSE) {
   # this warning (ARROW-14021)
   warn(
     "quantile() currently returns an approximate quantile in Arrow",
-    .frequency = ifelse(is_interactive(), "once", "always"),
+    .frequency = "once",
     .frequency_id = "arrow.quantile.approximate"
   )
   list(
@@ -1079,7 +1079,7 @@ agg_funcs$median <- function(x, na.rm = FALSE) {
   # this warning (ARROW-14021)
   warn(
     "median() currently returns an approximate median in Arrow",
-    .frequency = ifelse(is_interactive(), "once", "always"),
+    .frequency = "once",
     .frequency_id = "arrow.median.approximate"
   )
   list(
