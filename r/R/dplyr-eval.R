@@ -193,7 +193,13 @@ translate_to_arrow <- function(.fun, .env) {
   # handle the non-translatable case first as it is more complex
 
   if (!translatable(.fun, .env)) {
-    unknown_function <- setdiff(all_funs(function_body[[2]]), names(.env))
+    unknown_function <- setdiff(
+      all_funs(function_body),
+      union(
+        names(.env),
+        translation_exceptions
+      )
+    )
 
     if (grepl("::", unknown_function)) {
       fn <- asNamespace(sub(":{+}.*?$", "", unknown_function))[[sub("^.*?:{+}", "", unknown_function)]]
@@ -252,6 +258,8 @@ translate_to_arrow_rec <- function(x) {
                 }
                 children <- as.list(x[-1])
                 children_translated <- map(children, translate_to_arrow_rec)
+                # TODO we need to handle bindings vs regular calls (i.e. calls
+                # that we don't want to translate, such as `<-`) differently
                 call2(call_binding, function_name, !!!children_translated)
               }
   )
@@ -274,7 +282,10 @@ translatable <- function(.fun, .env) {
   # get all the function calls inside the body of the unknown binding
   # the second element is the actual body of a function (the first one are the
   # curly brackets)
-  body_calls <- all_funs(function_body[[2]])
+  body_calls <- setdiff(
+    all_funs(function_body),
+    translation_exceptions
+  )
 
   # we can translate if all calls have matching bindings in env
   if (all(body_calls %in% names(.env))) {
@@ -309,6 +320,7 @@ switch_expr <- function(x, ...) {
 # vector of function names that do not have corresponding bindings, but we
 # shouldn't try to translate
 translation_exceptions <- c(
+  "<-",
   "c",
   "$",
   "factor",
@@ -317,10 +329,13 @@ translation_exceptions <- c(
   "across",
   ":",
   "[",
+  "{",
   "regex",
   "fixed",
   "list",
   "%>%",
+  "==",
+  "-",
   # all the types functions
   "int8",
   "int16",
